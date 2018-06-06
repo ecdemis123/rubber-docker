@@ -25,25 +25,19 @@ def cli():
     pass
 
 
-def contain(command):
-    # TODO: exec command, note the difference between the exec flavours
-    #       https://docs.python.org/2/library/os.html#os.execv
-    # NOTE: command is an array (the first element is path/file, and the entire
-    #       array is exec's args)
-
-    os._exit(0)  # TODO: remove this after adding exec
+def contain(command, environment):
+    os.execve(command[0], command, environment)
 
 
 @cli.command(context_settings=dict(ignore_unknown_options=True,))
+@click.option('-environment', '-e', help='optional arugment to pass for environment', default=os.environ)
 @click.argument('Command', required=True, nargs=-1)
-def run(command):
-    # TODO: replace this with fork()
-    #       (https://docs.python.org/2/library/os.html#os.fork)
-    pid = 0
+def run(environment, command):
+    pid = os.fork()
     if pid == 0:
         # This is the child, we'll try to do some containment here
         try:
-            contain(command)
+            contain(command, environment)
         except Exception:
             traceback.print_exc()
             os._exit(1)  # something went wrong in contain()
